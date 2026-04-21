@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ParkIn</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0A0C10;--surface:#12151C;--surface2:#1A1F2B;--surface3:#222836;
+  --accent:#4AE0A0;--accent2:#3BC88E;--accent-dim:rgba(74,224,160,0.12);
+  --text:#F0F2F7;--text2:#8B91A8;--text3:#4A5068;
+  --danger:#FF5757;--warn:#FFB547;--info:#5B9EFF;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --radius:14px;--radius-sm:8px;--radius-lg:20px;
+  --font:'Syne',sans-serif;--body:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden}
+.app{display:flex;flex-direction:column;min-height:100vh}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--border);background:rgba(10,12,16,0.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{font-family:var(--font);font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.logo span{color:var(--accent)}
+.nav-tabs{display:flex;gap:4px;background:var(--surface);border-radius:var(--radius);padding:4px}
+.nav-tab{padding:8px 16px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;border:none;background:transparent;color:var(--text2);font-family:var(--body)}
+.nav-tab.active{background:var(--accent);color:#000;font-weight:600}
+.nav-tab:hover:not(.active){background:var(--surface2);color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:12px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-dim);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;font-family:var(--font)}
+.notif-dot{width:8px;height:8px;background:var(--danger);border-radius:50%}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;flex:1;animation:fadeIn .25s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* HERO */
+.hero{padding:48px 28px 32px;display:flex;gap:40px;align-items:flex-start}
+.hero-left{flex:1}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-dim);border:1px solid rgba(74,224,160,0.25);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.5px;margin-bottom:16px;font-family:var(--font)}
+.hero-badge::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%}
+h1{font-family:var(--font);font-size:42px;font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:12px}
+h1 em{color:var(--accent);font-style:normal}
+.hero-sub{color:var(--text2);font-size:16px;line-height:1.6;max-width:420px;margin-bottom:28px}
+.search-bar{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:16px 18px;display:flex;gap:12px;align-items:center;max-width:480px;margin-bottom:18px}
+.search-bar input{background:transparent;border:none;outline:none;color:var(--text);font-size:15px;flex:1;font-family:var(--body)}
+.search-bar input::placeholder{color:var(--text3)}
+.search-bar .search-icon{color:var(--text3);font-size:18px}
+.btn{padding:12px 22px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;border:none;font-family:var(--font);letter-spacing:.3px}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:8px 14px;font-size:12px}
+
+/* STATS ROW */
+.stats-row{display:flex;gap:12px;margin-bottom:0}
+.stat-chip{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;text-align:center}
+.stat-num{font-family:var(--font);font-size:20px;font-weight:800;color:var(--accent)}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* MAP PLACEHOLDER */
+.hero-right{flex:0 0 340px}
+.map-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;height:280px;position:relative}
+.map-bg{width:100%;height:100%;background:linear-gradient(135deg,#0f1a24 0%,#0d1f18 50%,#111a12 100%);position:relative;display:flex;align-items:center;justify-content:center}
+.map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(74,224,160,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(74,224,160,0.05) 1px,transparent 1px);background-size:32px 32px}
+.map-pin{position:absolute;cursor:pointer;transform:translate(-50%,-100%);transition:transform .2s}
+.map-pin:hover{transform:translate(-50%,-100%) scale(1.15)}
+.pin-dot{width:36px;height:36px;border-radius:50% 50% 50% 0;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#000;box-shadow:0 4px 16px rgba(74,224,160,0.4);transform:rotate(-45deg);font-family:var(--font)}
+.pin-dot span{transform:rotate(45deg);display:block}
+.pin-price-tag{background:var(--surface);border:1px solid var(--accent);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--accent);margin-top:4px;white-space:nowrap;font-family:var(--font)}
+.map-label{color:var(--text2);font-size:13px;z-index:1}
+
+/* SECTION */
+.section{padding:0 28px 40px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.section-title{font-family:var(--font);font-size:20px;font-weight:700;letter-spacing:-.3px}
+.section-title span{color:var(--accent)}
+.see-all{font-size:13px;color:var(--accent);cursor:pointer;font-weight:500}
+
+/* CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.park-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all .2s;position:relative}
+.park-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 40px rgba(74,224,160,0.12)}
+.park-img{height:120px;background:var(--surface2);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.park-img-bg{width:100%;height:100%;position:absolute;inset:0}
+.park-tag{position:absolute;top:10px;left:10px;background:rgba(10,12,16,0.85);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--text);backdrop-filter:blur(8px)}
+.park-tag.avail{border-color:rgba(74,224,160,0.4);color:var(--accent)}
+.park-tag.pre{border-color:rgba(91,158,255,0.4);color:var(--info)}
+.park-body{padding:14px}
+.park-name{font-family:var(--font);font-size:15px;font-weight:700;margin-bottom:4px}
+.park-loc{font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:4px}
+.park-footer{display:flex;align-items:center;justify-content:space-between}
+.park-price{font-family:var(--font);font-size:17px;font-weight:800;color:var(--accent)}
+.park-price span{font-size:12px;font-weight:400;color:var(--text2);font-family:var(--body)}
+.park-rating{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2)}
+.star{color:#FFB547}
+.badge-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.badge{background:var(--surface3);border-radius:4px;padding:2px 7px;font-size:10px;color:var(--text2);font-weight:500}
+
+/* FILTER ROW */
+.filter-row{display:flex;gap:8px;margin-bottom:24px;overflow-x:auto;padding-bottom:4px}
+.filter-chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s;color:var(--text2);font-family:var(--body)}
+.filter-chip.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:500}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-family:var(--font);font-size:20px;font-weight:700}
+.modal-close{width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:16px;flex-shrink:0}
+.modal-body{padding:0 24px 24px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block;letter-spacing:.5px;font-family:var(--font)}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-size:14px;outline:none;transition:border .2s;font-family:var(--body)}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.time-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+.time-slot{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;text-align:center;font-size:12px;cursor:pointer;transition:all .2s;color:var(--text2)}
+.time-slot:hover,.time-slot.sel{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:600}
+.cost-breakdown{background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin:16px 0}
+.cost-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:6px}
+.cost-row.total{color:var(--text);font-weight:600;font-size:15px;border-top:1px solid var(--border);padding-top:8px;margin-top:6px;font-family:var(--font)}
+.cost-row.total .val{color:var(--accent)}
+.payment-methods{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px}
+.pay-opt{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px;text-align:center;cursor:pointer;transition:all .2s;font-size:12px;color:var(--text2)}
+.pay-opt.sel{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.pay-opt .ico{font-size:20px;margin-bottom:4px}
+.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;transition:border .2s;color:var(--text2);font-size:13px}
+.upload-zone:hover{border-color:var(--accent);color:var(--accent)}
+.upload-zone .big-ico{font-size:28px;margin-bottom:8px}
+.step-indicator{display:flex;gap:6px;margin-bottom:24px;justify-content:center}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--surface3);transition:all .3s}
+.step-dot.active{background:var(--accent);width:20px;border-radius:4px}
+.step-dot.done{background:var(--accent2)}
+.alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start}
+.alert-success{background:rgba(74,224,160,0.1);border:1px solid rgba(74,224,160,0.25);color:var(--accent)}
+.alert-warn{background:rgba(255,181,71,0.1);border:1px solid rgba(255,181,71,0.25);color:var(--warn)}
+.alert-info{background:rgba(91,158,255,0.1);border:1px solid rgba(91,158,255,0.25);color:var(--info)}
+
+/* BOOKINGS SCREEN */
+.bookings-list{display:flex;flex-direction:column;gap:12px}
+.booking-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;gap:16px;align-items:flex-start}
+.booking-icon{width:48px;height:48px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.booking-icon.active{background:var(--accent-dim);border:1px solid rgba(74,224,160,.3)}
+.booking-icon.upcoming{background:rgba(91,158,255,0.12);border:1px solid rgba(91,158,255,.3)}
+.booking-icon.past{background:var(--surface2);border:1px solid var(--border)}
+.booking-info{flex:1}
+.booking-name{font-family:var(--font);font-size:15px;font-weight:700;margin-bottom:4px}
+.booking-meta{font-size:12px;color:var(--text2);display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.booking-actions{display:flex;gap:8px;margin-top:4px}
+.status-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--font)}
+.status-pill.active{background:var(--accent-dim);color:var(--accent)}
+.status-pill.upcoming{background:rgba(91,158,255,0.12);color:var(--info)}
+.status-pill.past{background:var(--surface2);color:var(--text2)}
+.status-pill.cancelled{background:rgba(255,87,87,0.12);color:var(--danger)}
+.booking-right{text-align:right;flex-shrink:0}
+.booking-price{font-family:var(--font);font-size:16px;font-weight:800;color:var(--accent)}
+
+/* LIST SCREEN */
+.list-steps{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+.list-step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#000;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-family:var(--font)}
+.step-title{font-family:var(--font);font-size:14px;font-weight:700;margin-bottom:4px}
+.step-desc{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* EARNINGS CARD */
+.earnings-card{background:linear-gradient(135deg,var(--accent-dim) 0%,rgba(74,224,160,0.04) 100%);border:1px solid rgba(74,224,160,0.2);border-radius:var(--radius-lg);padding:24px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center}
+.earnings-left .lbl{font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500}
+.earnings-left .val{font-family:var(--font);font-size:36px;font-weight:800;color:var(--accent);letter-spacing:-1px}
+.earnings-left .sub{font-size:12px;color:var(--text2);margin-top:4px}
+.earnings-right{text-align:right}
+.earn-mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;min-width:100px;text-align:center}
+.earn-mini .em-lbl{font-size:10px;color:var(--text2);margin-bottom:2px}
+.earn-mini .em-val{font-family:var(--font);font-size:16px;font-weight:700;color:var(--text)}
+
+/* FEEDBACK */
+.stars-input{display:flex;gap:8px;font-size:28px;cursor:pointer;margin:10px 0}
+.star-i{color:var(--surface3);transition:color .15s}
+.star-i.lit{color:#FFB547}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:14px 18px;z-index:999;font-size:14px;display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all .4s;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast .t-icon{font-size:18px}
+
+/* TABS */
+.tab-bar{display:flex;gap:2px;background:var(--surface2);border-radius:var(--radius);padding:4px;margin-bottom:24px}
+.tab-btn{flex:1;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text2);transition:all .2s;font-family:var(--body)}
+.tab-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+
+.divider{height:1px;background:var(--border);margin:16px 0}
+.section-sub{font-size:13px;color:var(--text2);margin-bottom:16px}
+.empty{text-align:center;padding:48px 24px;color:var(--text2)}
+.empty .empty-ico{font-size:48px;margin-bottom:12px;opacity:.4}
+.empty p{font-size:14px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.qr-mock{width:80px;height:80px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);text-align:center;padding:8px}
+.info-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(91,158,255,0.1);border:1px solid rgba(91,158,255,0.2);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--info)}
+</style>
+</head>
+<body>
+<div class="app">
+<nav>
+  <div class="logo">Park<span>In</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showScreen('home')">Explore</button>
+    <button class="nav-tab" onclick="showScreen('bookings')">Bookings</button>
+    <button class="nav-tab" onclick="showScreen('list')">List Space</button>
+    <button class="nav-tab" onclick="showScreen('profile')">Profile</button>
+  </div>
+  <div class="nav-right">
+    <div class="notif-dot"></div>
+    <div class="avatar" onclick="showScreen('profile')">HP</div>
+  </div>
+</nav>
+
+<!-- HOME SCREEN -->
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-badge">Live Availability</div>
+      <h1>Find Your<br>Perfect <em>Spot</em></h1>
+      <p class="hero-sub">Rent verified private parking spaces by the hour. Safe, affordable, cashless.</p>
+      <div class="search-bar">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="search-input" placeholder="Enter location, landmark or zone…" oninput="filterCards()">
+      </div>
+      <div class="stats-row">
+        <div class="stat-chip"><div class="stat-num">2,840</div><div class="stat-lbl">Spaces</div></div>
+        <div class="stat-chip"><div class="stat-num">₹35</div><div class="stat-lbl">Avg/hr</div></div>
+        <div class="stat-chip"><div class="stat-num">4.8★</div><div class="stat-lbl">Avg Rating</div></div>
+        <div class="stat-chip"><div class="stat-num">12min</div><div class="stat-lbl">Avg Walk</div></div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="map-card">
+        <div class="map-bg">
+          <div class="map-grid"></div>
+          <div class="map-pin" style="left:28%;top:42%" onclick="openBookModal(0)">
+            <div class="pin-dot"><span>P</span></div>
+            <div class="pin-price-tag">₹30/hr</div>
+          </div>
+          <div class="map-pin" style="left:55%;top:30%" onclick="openBookModal(1)">
+            <div class="pin-dot"><span>P</span></div>
+            <div class="pin-price-tag">₹45/hr</div>
+          </div>
+          <div class="map-pin" style="left:70%;top:60%" onclick="openBookModal(2)">
+            <div class="pin-dot"><span>P</span></div>
+            <div class="pin-price-tag">₹25/hr</div>
+          </div>
+          <div class="map-label">📍 Tambaram & Nearby</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="filter-row">
+      <div class="filter-chip active" onclick="setFilter(this,'all')">All Spaces</div>
+      <div class="filter-chip" onclick="setFilter(this,'open')">Open Now</div>
+      <div class="filter-chip" onclick="setFilter(this,'covered')">Covered</div>
+      <div class="filter-chip" onclick="setFilter(this,'cctv')">CCTV</div>
+      <div class="filter-chip" onclick="setFilter(this,'ev')">EV Charging</div>
+      <div class="filter-chip" onclick="setFilter(this,'bike')">Bike-Friendly</div>
+      <div class="filter-chip" onclick="setFilter(this,'prebook')">Pre-Book</div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Nearby <span>Spaces</span></div>
+      <div class="see-all" onclick="showAll()">See all →</div>
+    </div>
+    <div class="cards-grid" id="cards-grid">
+    </div>
+  </div>
+</div>
+
+<!-- BOOKINGS SCREEN -->
+<div class="screen" id="screen-bookings">
+  <div class="section" style="padding-top:32px">
+    <div class="section-title" style="margin-bottom:6px">My Bookings</div>
+    <p class="section-sub">Track, manage and review your parking sessions.</p>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchBookTab(this,'active')">Active</button>
+      <button class="tab-btn" onclick="switchBookTab(this,'upcoming')">Upcoming</button>
+      <button class="tab-btn" onclick="switchBookTab(this,'past')">Past</button>
+    </div>
+    <div id="bookings-list" class="bookings-list"></div>
+  </div>
+</div>
+
+<!-- LIST SPACE SCREEN -->
+<div class="screen" id="screen-list">
+  <div class="section" style="padding-top:32px">
+    <div class="section-title" style="margin-bottom:6px">List Your <span style="color:var(--accent)">Space</span></div>
+    <p class="section-sub">Turn your unused parking into passive income. Verification required.</p>
+
+    <div class="earnings-card">
+      <div class="earnings-left">
+        <div class="lbl">Estimated Monthly Earnings</div>
+        <div class="val" id="earn-val">₹4,200</div>
+        <div class="sub">Based on 6hrs/day · ₹35/hr</div>
+      </div>
+      <div class="earnings-right">
+        <div class="earn-mini"><div class="em-lbl">Active Listings</div><div class="em-val">1</div></div>
+        <div style="margin-top:8px" class="earn-mini"><div class="em-lbl">Total Earned</div><div class="em-val">₹8,400</div></div>
+      </div>
+    </div>
+
+    <div class="list-steps">
+      <div class="list-step"><div class="step-num">1</div><div class="step-title">Add Space Details</div><div class="step-desc">Address, type, capacity and photos</div></div>
+      <div class="list-step"><div class="step-num">2</div><div class="step-title">ID Verification</div><div class="step-desc">Aadhaar / Voter ID + ownership proof</div></div>
+      <div class="list-step"><div class="step-num">3</div><div class="step-title">Set Availability</div><div class="step-desc">Hours, pricing, and blackout dates</div></div>
+      <div class="list-step"><div class="step-num">4</div><div class="step-title">Go Live</div><div class="step-desc">Get reviewed and start earning</div></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:16px;font-size:16px" onclick="openListModal()">+ List My Space</button>
+  </div>
+</div>
+
+<!-- PROFILE SCREEN -->
+<div class="screen" id="screen-profile">
+  <div class="section" style="padding-top:32px">
+    <div style="display:flex;align-items:center;gap:18px;margin-bottom:28px">
+      <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;font-family:var(--font);color:var(--accent)">HP</div>
+      <div>
+        <div style="font-family:var(--font);font-size:20px;font-weight:700">Harine Pillai</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:2px">harine@email.com · +91 98765 43210</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <div class="info-chip">✓ Aadhaar Verified</div>
+          <div class="info-chip">✓ DL Verified</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+      <div class="stat-chip"><div class="stat-num">14</div><div class="stat-lbl">Total Bookings</div></div>
+      <div class="stat-chip"><div class="stat-num">4.9</div><div class="stat-lbl">Your Rating</div></div>
+      <div class="stat-chip"><div class="stat-num">₹1,240</div><div class="stat-lbl">Wallet</div></div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div class="profile-item" onclick="openVerifyModal()">
+        <span>🪪</span><span>Documents & KYC</span><span style="color:var(--text3)">→</span>
+      </div>
+      <div class="profile-item" onclick="showToast('💳','Payment methods updated')">
+        <span>💳</span><span>Payment Methods</span><span style="color:var(--text3)">→</span>
+      </div>
+      <div class="profile-item" onclick="showToast('🔔','Notification settings saved')">
+        <span>🔔</span><span>Notifications</span><span style="color:var(--text3)">→</span>
+      </div>
+      <div class="profile-item" onclick="showToast('🛡️','Privacy policy opened')">
+        <span>🛡️</span><span>Privacy & Security</span><span style="color:var(--text3)">→</span>
+      </div>
+      <div class="profile-item" onclick="showToast('⭐','Refer a friend link copied!')">
+        <span>⭐</span><span>Refer & Earn ₹100</span><span style="color:var(--accent)">→</span>
+      </div>
+      <div class="profile-item" onclick="showToast('🚪','Logging out...')">
+        <span>🚪</span><span style="color:var(--danger)">Sign Out</span><span></span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODALS -->
+<!-- Book Modal -->
+<div class="modal-overlay" id="modal-book">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="book-modal-title">Book Space</div>
+      <div class="modal-close" onclick="closeModal('modal-book')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="step-indicator" id="book-steps">
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div id="book-step-1">
+        <div id="book-space-info"></div>
+        <div class="form-group">
+          <label class="form-label">VEHICLE TYPE</label>
+          <div style="display:flex;gap:8px">
+            <div class="pay-opt" onclick="selVehicle(this,'Car')"><div class="ico">🚗</div>Car</div>
+            <div class="pay-opt sel" onclick="selVehicle(this,'Bike')"><div class="ico">🏍️</div>Bike</div>
+            <div class="pay-opt" onclick="selVehicle(this,'SUV')"><div class="ico">🚙</div>SUV</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">FROM DATE</label>
+            <input type="date" class="form-input" id="from-date">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">TO DATE</label>
+            <input type="date" class="form-input" id="to-date">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:14px">
+          <label class="form-label">START TIME</label>
+          <div class="time-slots" id="time-slots"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">DURATION (HOURS)</label>
+          <input type="range" min="1" max="12" value="2" id="dur-slider" oninput="updateCost()">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-top:4px">
+            <span>1 hr</span><span id="dur-display" style="color:var(--accent);font-weight:600">2 hrs</span><span>12 hrs</span>
+          </div>
+        </div>
+        <div class="cost-breakdown">
+          <div class="cost-row"><span>Parking fee</span><span id="cb-fee">₹90</span></div>
+          <div class="cost-row"><span>Platform fee</span><span>₹5</span></div>
+          <div class="cost-row"><span>GST (18%)</span><span id="cb-gst">₹17</span></div>
+          <div class="cost-row total"><span>Total</span><span class="val" id="cb-total">₹112</span></div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:14px" onclick="nextBookStep(1)">Continue →</button>
+      </div>
+      <div id="book-step-2" style="display:none">
+        <div class="alert alert-info"><span>ℹ</span> Required for safety compliance. Your details are encrypted and never shared.</div>
+        <div class="form-group">
+          <label class="form-label">VEHICLE REGISTRATION NUMBER</label>
+          <input type="text" class="form-input" placeholder="TN 21 AB 1234" id="reg-num">
+        </div>
+        <div class="form-group">
+          <label class="form-label">DRIVING LICENCE NUMBER</label>
+          <input type="text" class="form-input" placeholder="TN0220230012345" id="dl-num">
+        </div>
+        <div class="form-group">
+          <label class="form-label">UPLOAD LICENCE (FRONT)</label>
+          <div class="upload-zone" onclick="showToast('📂','File picker opened')">
+            <div class="big-ico">📋</div>
+            <div>Tap to upload DL image</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">JPG, PNG up to 5MB</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">UPLOAD AADHAAR / GOVT. ID</label>
+          <div class="upload-zone" onclick="showToast('📂','File picker opened')">
+            <div class="big-ico">🪪</div>
+            <div>Tap to upload ID proof</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary" onclick="goBookStep(1)">← Back</button>
+          <button class="btn btn-primary" style="flex:1;padding:14px" onclick="nextBookStep(2)">Continue →</button>
+        </div>
+      </div>
+      <div id="book-step-3" style="display:none">
+        <div class="form-group">
+          <label class="form-label">PAYMENT METHOD</label>
+          <div class="payment-methods">
+            <div class="pay-opt sel" onclick="selPay(this)"><div class="ico">📱</div>UPI</div>
+            <div class="pay-opt" onclick="selPay(this)"><div class="ico">💳</div>Card</div>
+            <div class="pay-opt" onclick="selPay(this)"><div class="ico">🏦</div>Wallet</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">UPI ID / MOBILE</label>
+          <input type="text" class="form-input" placeholder="username@upi or 9876543210" id="upi-id">
+        </div>
+        <div class="alert alert-warn"><span>⚠</span> Refund within 2 hrs of booking start. 10% cancellation fee applies after.</div>
+        <div class="cost-breakdown">
+          <div class="cost-row total"><span>Payable Now</span><span class="val" id="cb-total2">₹112</span></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary" onclick="goBookStep(2)">← Back</button>
+          <button class="btn btn-primary" style="flex:1;padding:14px" onclick="confirmBooking()">Pay & Confirm →</button>
+        </div>
+      </div>
+      <div id="book-step-4" style="display:none;text-align:center;padding:20px 0">
+        <div style="font-size:56px;margin-bottom:16px">✅</div>
+        <div style="font-family:var(--font);font-size:22px;font-weight:800;margin-bottom:8px">Booking Confirmed!</div>
+        <div style="font-size:14px;color:var(--text2);margin-bottom:20px">Your spot is reserved. Show the QR code at entry.</div>
+        <div style="display:flex;justify-content:center;margin-bottom:20px">
+          <div class="qr-mock">QR CODE<br>MOCK</div>
+        </div>
+        <div class="alert alert-success" style="text-align:left"><span>✓</span> Confirmation sent to your email & SMS</div>
+        <button class="btn btn-primary" style="width:100%;padding:14px;margin-top:8px" onclick="closeModal('modal-book');showScreen('bookings')">View Booking →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- List Modal -->
+<div class="modal-overlay" id="modal-list">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">List Your Space</div>
+      <div class="modal-close" onclick="closeModal('modal-list')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">SPACE ADDRESS</label>
+        <input type="text" class="form-input" placeholder="Full address with pincode">
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">SPACE TYPE</label>
+          <select class="form-input">
+            <option>Open Ground</option>
+            <option>Covered Shed</option>
+            <option>Basement Slot</option>
+            <option>Gated Complex</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">CAPACITY</label>
+          <select class="form-input">
+            <option>1 Vehicle</option>
+            <option>2 Vehicles</option>
+            <option>3-5 Vehicles</option>
+            <option>6+ Vehicles</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">PRICE PER HOUR (₹)</label>
+          <input type="number" class="form-input" placeholder="35" min="10" max="200">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">PRICE PER DAY (₹)</label>
+          <input type="number" class="form-input" placeholder="250">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:14px">
+        <label class="form-label">AMENITIES</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <div class="filter-chip" onclick="this.classList.toggle('active')">CCTV</div>
+          <div class="filter-chip" onclick="this.classList.toggle('active')">Covered</div>
+          <div class="filter-chip" onclick="this.classList.toggle('active')">24/7</div>
+          <div class="filter-chip" onclick="this.classList.toggle('active')">EV Charging</div>
+          <div class="filter-chip" onclick="this.classList.toggle('active')">Security Guard</div>
+          <div class="filter-chip" onclick="this.classList.toggle('active')">Wheelchair</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">OWNERSHIP PROOF (SALE DEED / RENTAL AGREEMENT)</label>
+        <div class="upload-zone" onclick="showToast('📂','Upload picker opened')">
+          <div class="big-ico">🏠</div>
+          <div>Upload ownership document</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">YOUR GOVT. ID (AADHAAR / PAN)</label>
+        <div class="upload-zone" onclick="showToast('📂','Upload picker opened')">
+          <div class="big-ico">🪪</div>
+          <div>Upload ID proof</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">SPACE PHOTOS</label>
+        <div class="upload-zone" onclick="showToast('📷','Camera opened')">
+          <div class="big-ico">📷</div>
+          <div>Upload 3–5 photos</div>
+        </div>
+      </div>
+      <div class="alert alert-warn"><span>⚠</span> All listings undergo 24–48 hr verification before going live. You'll be notified via email.</div>
+      <button class="btn btn-primary" style="width:100%;padding:14px" onclick="submitListing()">Submit for Review →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel/Refund Modal -->
+<div class="modal-overlay" id="modal-cancel">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Cancel Booking</div>
+      <div class="modal-close" onclick="closeModal('modal-cancel')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-warn"><span>⚠</span> Cancellations within 2hrs of start: full refund. After that: 10% fee applies.</div>
+      <div class="form-group">
+        <label class="form-label">REASON FOR CANCELLATION</label>
+        <select class="form-input">
+          <option>Change of plans</option>
+          <option>Found alternative parking</option>
+          <option>Emergency</option>
+          <option>Owner unreachable</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ADDITIONAL NOTES (OPTIONAL)</label>
+        <textarea class="form-input" rows="3" placeholder="Any additional context..."></textarea>
+      </div>
+      <div class="cost-breakdown">
+        <div class="cost-row"><span>Original payment</span><span>₹112</span></div>
+        <div class="cost-row"><span>Cancellation fee</span><span style="color:var(--danger)">— ₹0</span></div>
+        <div class="cost-row total"><span>Refund amount</span><span class="val">₹112</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px">Refund to original payment method within 3–5 business days.</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-cancel')">Keep Booking</button>
+        <button class="btn btn-danger" style="flex:1" onclick="processCancellation()">Confirm Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal-overlay" id="modal-feedback">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Rate Your Experience</div>
+      <div class="modal-close" onclick="closeModal('modal-feedback')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div id="feedback-space-name" style="font-size:14px;color:var(--text2);margin-bottom:4px"></div>
+      <div class="form-group">
+        <label class="form-label">OVERALL RATING</label>
+        <div class="stars-input" id="stars">
+          <span class="star-i" onclick="setStars(1)">★</span>
+          <span class="star-i" onclick="setStars(2)">★</span>
+          <span class="star-i" onclick="setStars(3)">★</span>
+          <span class="star-i" onclick="setStars(4)">★</span>
+          <span class="star-i" onclick="setStars(5)">★</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">WHAT DID YOU LIKE?</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <div class="filter-chip" onclick="this.classList.toggle('active')">Easy access</div>
+          <div class="filter-chip" onclick="this.classList.toggle('active')">Clean space</div>
+          <div class="filter-chip" onclick="this.classList.toggle('active')">Safe & secure</div>
+          <div class="filter-chip" onclick="this.classList.toggle('active')">Good value</div>
+          <div class="filter-chip" onclick="this.classList.toggle('active')">Helpful host</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">YOUR REVIEW</label>
+        <textarea class="form-input" rows="3" placeholder="Describe your experience in detail..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ATTACH PHOTOS (OPTIONAL)</label>
+        <div class="upload-zone" onclick="showToast('📷','Photo picker opened')">
+          <div>📷 Add photos</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:14px" onclick="submitFeedback()">Submit Review →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Verify Modal -->
+<div class="modal-overlay" id="modal-verify">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Documents & KYC</div>
+      <div class="modal-close" onclick="closeModal('modal-verify')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-success"><span>✓</span> Your Aadhaar and Driving Licence are verified.</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-weight:600;font-size:14px">Aadhaar Card</div><div style="font-size:12px;color:var(--text2)">**** **** 7821</div></div>
+          <div class="status-pill active">Verified</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-weight:600;font-size:14px">Driving Licence</div><div style="font-size:12px;color:var(--text2)">TN022023XXXXX</div></div>
+          <div class="status-pill active">Verified</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-weight:600;font-size:14px">PAN Card</div><div style="font-size:12px;color:var(--text2)">Not uploaded</div></div>
+          <button class="btn btn-secondary btn-sm" onclick="showToast('📂','Upload PAN card')">Upload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span class="t-icon" id="toast-icon">✓</span>
+  <span id="toast-msg">Done!</span>
+</div>
+
+<style>
+.profile-item{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;gap:10px;font-size:14px}
+.profile-item:last-child{border-bottom:none}
+.profile-item:hover{background:var(--surface2)}
+.profile-item>span:first-child{font-size:18px;width:24px}
+.profile-item>span:nth-child(2){flex:1;font-weight:500}
+</style>
+
+<script>
+const spaces=[
+  {name:"Sri Nagar Covered Bay",loc:"Tambaram East, 0.4km",price:30,priceDay:200,rating:4.8,reviews:42,tags:["Covered","CCTV","Bike-Friendly"],type:"covered",avail:true,img:"🏢",col:"#1a2a1f"},
+  {name:"OMR Tech Park Slot",loc:"Perungudi, 1.2km",price:45,priceDay:320,rating:4.9,reviews:88,tags:["24/7","EV Charging","CCTV"],type:"open",avail:true,img:"🏗️",col:"#1a1f2a",prebook:true},
+  {name:"Chromepet Residence",loc:"Chromepet, 0.8km",price:25,priceDay:170,rating:4.6,reviews:29,tags:["Open","Gated"],type:"open",avail:true,img:"🏘️",col:"#24191a"},
+  {name:"Anna Nagar Complex",loc:"Anna Nagar, 2.1km",price:55,priceDay:380,rating:4.9,reviews:124,tags:["Basement","Security","EV"],type:"covered",avail:false,prebook:true,img:"🏬",col:"#1a1e27"},
+  {name:"Guindy Industrial Shed",loc:"Guindy, 1.8km",price:20,priceDay:130,rating:4.4,reviews:17,tags:["Covered","Bike-Friendly"],type:"covered",avail:true,img:"🏭",col:"#1f1a14"},
+  {name:"Velachery Lake View",loc:"Velachery, 3.0km",price:40,priceDay:270,rating:4.7,reviews:56,tags:["Open","CCTV","24/7"],type:"open",avail:true,img:"🌳",col:"#151f15"},
+];
+
+const bookings=[
+  {id:1,name:"Sri Nagar Covered Bay",loc:"Tambaram East",date:"Today 10:00–13:00",price:112,status:"active",icon:"🚗"},
+  {id:2,name:"OMR Tech Park Slot",loc:"Perungudi",date:"Apr 23, 09:00–18:00",price:405,status:"upcoming",icon:"🚙"},
+  {id:3,name:"Chromepet Residence",loc:"Chromepet",date:"Apr 18, 14:00–16:00",price:65,status:"past",icon:"🏍️"},
+  {id:4,name:"Anna Nagar Complex",loc:"Anna Nagar",date:"Apr 10, 08:00–20:00",price:660,status:"past",icon:"🚗"},
+];
+
+let currentBookingIdx=0;
+let currentStars=0;
+let currentBookTab="active";
+
+function renderCards(filter="all"){
+  const g=document.getElementById("cards-grid");
+  const q=document.getElementById("search-input").value.toLowerCase();
+  let data=spaces;
+  if(filter==="open") data=data.filter(s=>s.avail);
+  if(filter==="covered") data=data.filter(s=>s.type==="covered");
+  if(filter==="cctv") data=data.filter(s=>s.tags.some(t=>t.includes("CCTV")));
+  if(filter==="ev") data=data.filter(s=>s.tags.some(t=>t.includes("EV")));
+  if(filter==="bike") data=data.filter(s=>s.tags.some(t=>t.includes("Bike")));
+  if(filter==="prebook") data=data.filter(s=>s.prebook);
+  if(q) data=data.filter(s=>s.name.toLowerCase().includes(q)||s.loc.toLowerCase().includes(q));
+  if(!data.length){g.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-ico">🔍</div><p>No spaces match your search</p></div>';return;}
+  g.innerHTML=data.map((s,i)=>`
+    <div class="park-card" onclick="openBookModal(${spaces.indexOf(s)})">
+      <div class="park-img" style="background:${s.col}">
+        <div style="font-size:40px;z-index:1">${s.img}</div>
+        <div class="park-tag ${s.avail?'avail':'pre'}">${s.avail?'● Available':'Pre-Book'}</div>
+      </div>
+      <div class="park-body">
+        <div class="park-name">${s.name}</div>
+        <div class="park-loc">📍 ${s.loc}</div>
+        <div class="badge-row">${s.tags.map(t=>`<div class="badge">${t}</div>`).join("")}</div>
+        <div class="park-footer">
+          <div class="park-price">₹${s.price}<span>/hr</span></div>
+          <div class="park-rating"><span class="star">★</span>${s.rating} (${s.reviews})</div>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+let activeFilter="all";
+function setFilter(el,f){
+  document.querySelectorAll(".filter-chip").forEach(c=>c.classList.remove("active"));
+  el.classList.add("active");
+  activeFilter=f;
+  renderCards(f);
+}
+function filterCards(){renderCards(activeFilter);}
+function showAll(){renderCards("all");document.querySelectorAll(".filter-chip").forEach(c=>c.classList.remove("active"));document.querySelector(".filter-chip").classList.add("active");}
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.querySelector("#screen-"+id).classList.add("active");
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+  const map={home:0,bookings:1,list:2,profile:3};
+  document.querySelectorAll(".nav-tab")[map[id]].classList.add("active");
+  if(id==="bookings") renderBookings(currentBookTab);
+}
+
+function renderBookings(tab){
+  currentBookTab=tab;
+  const list=document.getElementById("bookings-list");
+  const data=bookings.filter(b=>b.status===tab||(tab==="past"&&b.status==="cancelled"));
+  if(!data.length){list.innerHTML='<div class="empty"><div class="empty-ico">📋</div><p>No '+tab+' bookings</p></div>';return;}
+  list.innerHTML=data.map(b=>`
+    <div class="booking-card">
+      <div class="booking-icon ${b.status}">${b.icon}</div>
+      <div class="booking-info">
+        <div class="booking-name">${b.name}</div>
+        <div class="booking-meta"><span>📍 ${b.loc}</span><span>🕐 ${b.date}</span></div>
+        <div class="booking-actions">
+          ${b.status==="upcoming"?`<button class="btn btn-secondary btn-sm" onclick="openModal('modal-cancel')">Cancel</button>`:""}
+          ${b.status==="active"?`<button class="btn btn-secondary btn-sm" onclick="showToast('🗺️','Navigation opened')">Navigate</button>`:""}
+          ${b.status==="past"?`<button class="btn btn-secondary btn-sm" onclick="openFeedback('${b.name}')">Review</button>`:""}
+          ${b.status==="active"?`<button class="btn btn-secondary btn-sm" onclick="showToast('🔄','Extension requested')">Extend</button>`:""}
+        </div>
+      </div>
+      <div class="booking-right">
+        <div class="booking-price">₹${b.price}</div>
+        <div class="status-pill ${b.status}" style="margin-top:6px">${b.status}</div>
+      </div>
+    </div>`).join("");
+}
+
+function switchBookTab(el,tab){
+  document.querySelectorAll(".tab-btn").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  renderBookings(tab);
+}
+
+const times=["07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"];
+function initBookModal(idx){
+  currentBookingIdx=idx;
+  const s=spaces[idx];
+  document.getElementById("book-modal-title").textContent="Book – "+s.name;
+  document.getElementById("book-space-info").innerHTML=`
+    <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;display:flex;gap:12px;align-items:center">
+      <div style="font-size:32px">${s.img}</div>
+      <div>
+        <div style="font-family:var(--font);font-weight:700;font-size:15px">${s.name}</div>
+        <div style="font-size:12px;color:var(--text2)">📍 ${s.loc}</div>
+        <div style="display:flex;gap:6px;margin-top:6px">${s.tags.map(t=>`<div class="badge">${t}</div>`).join("")}</div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div style="font-family:var(--font);font-size:20px;font-weight:800;color:var(--accent)">₹${s.price}<span style="font-size:12px;font-weight:400;color:var(--text2)">/hr</span></div>
+        <div style="font-size:11px;color:var(--text2)">₹${s.priceDay||s.price*7}/day</div>
+      </div>
+    </div>`;
+  const ts=document.getElementById("time-slots");
+  ts.innerHTML=times.map((t,i)=>`<div class="time-slot${i===3?' sel':''}" onclick="selTime(this)">${t}</div>`).join("");
+  const d=new Date();
+  document.getElementById("from-date").value=d.toISOString().split("T")[0];
+  document.getElementById("to-date").value=d.toISOString().split("T")[0];
+  updateCost();
+}
+
+function selTime(el){document.querySelectorAll(".time-slot").forEach(t=>t.classList.remove("sel"));el.classList.add("sel");}
+function selVehicle(el,v){document.querySelectorAll("#book-step-1 .pay-opt").forEach(p=>p.classList.remove("sel"));el.classList.add("sel");}
+function selPay(el){document.querySelectorAll("#book-step-3 .pay-opt").forEach(p=>p.classList.remove("sel"));el.classList.add("sel");}
+
+function updateCost(){
+  const s=spaces[currentBookingIdx];
+  const dur=parseInt(document.getElementById("dur-slider").value);
+  document.getElementById("dur-display").textContent=dur+" hr"+(dur>1?"s":"");
+  const fee=s.price*dur;
+  const gst=Math.round(fee*0.18);
+  const total=fee+5+gst;
+  document.getElementById("cb-fee").textContent="₹"+fee;
+  document.getElementById("cb-gst").textContent="₹"+gst;
+  document.getElementById("cb-total").textContent="₹"+total;
+  document.getElementById("cb-total2").textContent="₹"+total;
+}
+
+function goBookStep(step){showStep(step);}
+function nextBookStep(step){
+  if(step===1){if(!document.getElementById("reg-num").value&&step===2){showToast("⚠","Fill registration number");return;}}
+  showStep(step+1);
+}
+function showStep(n){
+  for(let i=1;i<=4;i++){
+    document.getElementById("book-step-"+i).style.display=i===n?"block":"none";
+  }
+  const dots=document.querySelectorAll("#book-steps .step-dot");
+  dots.forEach((d,i)=>{
+    d.classList.remove("active","done");
+    if(i<n-1)d.classList.add("done");
+    if(i===n-1)d.classList.add("active");
+  });
+}
+
+function confirmBooking(){
+  showStep(4);
+  bookings.unshift({id:99,name:spaces[currentBookingIdx].name,loc:spaces[currentBookingIdx].loc,date:"Today, just booked",price:parseInt(document.getElementById("cb-total").textContent.replace("₹","")),status:"upcoming",icon:"🚗"});
+  showToast("✅","Booking confirmed!");
+}
+
+function openBookModal(idx){
+  currentBookingIdx=idx;
+  showStep(1);
+  openModal("modal-book");
+  setTimeout(()=>initBookModal(idx),10);
+}
+function openListModal(){openModal("modal-list");}
+function openVerifyModal(){openModal("modal-verify");}
+function openFeedback(name){
+  document.getElementById("feedback-space-name").textContent="Review for: "+name;
+  setStars(0);
+  openModal("modal-feedback");
+}
+
+function openModal(id){document.getElementById(id).classList.add("open");}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
+
+function submitListing(){closeModal("modal-list");showToast("📋","Submitted for review! You'll hear back in 24–48 hrs.");}
+function submitFeedback(){closeModal("modal-feedback");showToast("⭐","Review submitted. Thank you!");}
+function processCancellation(){closeModal("modal-cancel");showToast("✅","Booking cancelled. Refund in 3–5 days.");}
+
+function setStars(n){
+  currentStars=n;
+  document.querySelectorAll(".star-i").forEach((s,i)=>s.classList.toggle("lit",i<n));
+}
+
+let toastTimeout;
+function showToast(icon,msg){
+  const t=document.getElementById("toast");
+  document.getElementById("toast-icon").textContent=icon;
+  document.getElementById("toast-msg").textContent=msg;
+  t.classList.add("show");
+  clearTimeout(toastTimeout);
+  toastTimeout=setTimeout(()=>t.classList.remove("show"),3200);
+}
+
+document.querySelectorAll(".modal-overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("open");}));
+
+renderCards();
+</script>
+</body>
+</html>
